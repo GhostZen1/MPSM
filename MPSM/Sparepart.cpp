@@ -14,7 +14,6 @@ void Sparepart::ViewMonthlyReport(int id) {
 	cout << "View Monthly Report for Motorcycle Spare Part" << endl;
 
 	cout << "Staff Name : " + DBConn().getStaffUserName(id) << endl;
-
-	
+	cout << "hello";
 }
 #pragma endregion
