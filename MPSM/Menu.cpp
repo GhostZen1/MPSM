@@ -57,13 +57,16 @@ void Menu::MainPage()
 		cout << "What role are you?" << endl;
 		cout << "1.	Supplier" << endl;
 		cout << "2.	Staff" << endl;
+		cout << "0.	Back" << endl;
 		cout << "\nYour Choice : ";
 		cin >> role;
 
 		if (role == 1)
 			Login().SupplierRegisteration();
-		else
+		else if (role == 2)
 			Login().StaffRegisteration();
+		else
+			MainPage();
 	}
 	else {
 		exit(1);
