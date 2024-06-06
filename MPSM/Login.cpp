@@ -42,14 +42,20 @@ void Login::StaffRegisteration() {
 	cout << "1.Male" << endl;
 	cout << "\nYour Choice : ";
 	cin >> staffGender;
-	cout << "Enter your Username : ";
-	cin >> staffUsername;
-	cout << "Enter your Password : ";
-	cin >> staffPassword;
+	if (staffGender != 0 || staffGender != 1) {
+		cout << "Invalid Input" << endl;
+		StaffRegisteration();
+	}
+	else {
+		cout << "Enter your Username : ";
+		getline(cin >> ws, staffUsername);
+		cout << "Enter your Password : ";
+		getline(cin >> ws, staffPassword);
 
-	DBConn().Staffregisteration(staffName, staffGender, staffUsername, staffPassword);
-	cout << "Register Successfully" << endl;
-	system("pause");
-	Menu().MainPage();
+		DBConn().Staffregisteration(staffName, staffGender, staffUsername, staffPassword);
+		cout << "Register Successfully" << endl;
+		system("pause");
+		Menu().MainPage();
+	}
 }
 #pragma endregion

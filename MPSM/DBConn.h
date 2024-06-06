@@ -14,7 +14,7 @@ public:
     sql::ResultSet* rs;
 
 #pragma region declaration
-    int id, Stockbalance;
+    int id, Stockbalance, ProductQtt;
     string name;
 
     struct Item {
@@ -26,6 +26,12 @@ public:
         string ItemBrand;
         string ItemPrice;
         int quantity;
+    };
+
+    struct Supplier {
+        int SupplierID;
+        string SupplierName;
+        string SupplierAddress;
     };
 
     struct SparepartList { 
@@ -54,6 +60,12 @@ public:
         string Brand;
         double price;
         double stockBalance;
+    };
+
+    struct MonthlyReport {
+        int TotalCount;
+        int SumTtlPrice;
+        int month;
     };
 #pragma endregion
 
@@ -322,11 +334,29 @@ public:
 #pragma endregion
 
 #pragma region Spare Part Management
-    SparepartList ListOfSparepart() {
+    Supplier* ListoFSupplier() {
+        Supplier* supplier = new Supplier[10000];
+
+        DBConn db;
+        db.preparedStatement("SELECT * FROM `supplier`;");
+        db.QuerySelectResult();
+        int itemCount = 0;
+        while (db.rs->next()) {
+            supplier[itemCount].SupplierID = db.rs->getInt("SupplierID");
+            supplier[itemCount].SupplierAddress = db.rs->getString("Address");
+            supplier[itemCount].SupplierName = db.rs->getString("Name");
+            itemCount++; 
+        }
+
+        return supplier;
+    }
+
+    SparepartList ListOfSparepart(int idSupplier) {
         Item* items = new Item[100000];
 
         DBConn db;
-        db.preparedStatement("SELECT p.ProductID,p.SupplierID,p.Name,p.Type,p.Brand,p.Price,s.Name SupplierName, p.Quantity FROM product p INNER JOIN supplier s ON p.SupplierID = s.SupplierID WHERE p.Quantity != 0;");
+        db.preparedStatement("SELECT p.ProductID,p.SupplierID,p.Name,p.Type,p.Brand,p.Price,s.Name SupplierName, p.Quantity FROM product p INNER JOIN supplier s ON p.SupplierID = s.SupplierID WHERE p.Quantity != 0 AND p.SupplierID = ?;");
+        db.stmt->setInt(1, idSupplier);
         db.QuerySelectResult();
         int itemCount = 0;
         while (db.rs->next()) {
@@ -338,6 +368,32 @@ public:
             items[itemCount].ItemBrand = db.rs->getString("Brand"); 
             items[itemCount].ItemPrice = db.rs->getString("Price"); 
             items[itemCount].quantity = db.rs->getInt("Quantity"); 
+            itemCount++;
+        }
+        SparepartList list;
+        list.items = items;
+        list.count = itemCount;
+        return list;
+        //return items; 
+    }
+
+    SparepartList ListOfPayment(int idStaff) {
+        Item* items = new Item[100000];
+
+        DBConn db;
+        db.preparedStatement("SELECT oi.ItemID, p.SupplierID, p.Name, p.Type,p.Brand,p.Price,oi.Quantity, s.Name SupplierName FROM `order` o join orderitem oi on oi.OrderID = o.OrderID join product p on p.ProductID = oi.ProductID join supplier s on s.SupplierID = p.SupplierID WHERE o.isActive = 0 AND o.StaffID = ?;");
+        db.stmt->setInt(1, idStaff);
+        db.QuerySelectResult();
+        int itemCount = 0;
+        while (db.rs->next()) {
+            items[itemCount].ItemID = db.rs->getInt("ItemID");
+            items[itemCount].SupplierID = db.rs->getInt("SupplierID");
+            items[itemCount].SupplierName = db.rs->getString("SupplierName"); 
+            items[itemCount].ItemName = db.rs->getString("Name");
+            items[itemCount].ItemType = db.rs->getString("Type");
+            items[itemCount].ItemBrand = db.rs->getString("Brand");
+            items[itemCount].ItemPrice = db.rs->getString("Price");
+            items[itemCount].quantity = db.rs->getInt("Quantity");
             itemCount++;
         }
         SparepartList list;
@@ -392,7 +448,7 @@ public:
         return sparepart;
     }
 
-    int MakeOrder(const int& StaffId, const double& price) {
+    int MakeOrder(const int& StaffId, const double& price, int isActive) {
         time_t now = std::time(nullptr);
 
         // Convert to local time
@@ -407,7 +463,7 @@ public:
         DBConn db;
         db.preparedStatement("INSERT INTO `order`(`StaffID`, `isActive`, `TotalPrice`, `DateTime`) VALUES (?,?,?,?)");
         db.stmt->setInt(1, StaffId); 
-        db.stmt->setInt(2, 1); 
+        db.stmt->setInt(2, isActive); 
         db.stmt->setDouble(3, price); 
         db.stmt->setDateTime(4, datetime_str);
         db.QueryStatement(); 
@@ -477,32 +533,66 @@ public:
         }
     }
 
-    void UpdateSparepart(const int& SparepartID, const int& StockBalance) {
-        int balance = CheckSparepartBalance(SparepartID);
-        int newStockBalance = balance + StockBalance;
+    int CheckProductQuantity(const int& ProductID) {
+        DBConn db;
+        db.preparedStatement("SELECT * FROM `product` WHERE ProductID =  ?");
+        db.stmt->setInt(1, ProductID);
+        db.QuerySelectResult();
+        if (db.rs->rowsCount() == 1) {
+            while (db.rs->next()) {
+                ProductQtt = db.rs->getInt("Quantity");
+            }
+            return ProductQtt;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    int UpdateSparepart(const int& SparepartID, const int& StockBalance) { 
+        try { 
+            DBConn db;
+            db.preparedStatement("UPDATE `sparepart` SET `StockBalance`=? WHERE `SparepartID` = ?");
+            db.stmt->setInt(1, StockBalance);
+            db.stmt->setInt(2, SparepartID);
+            db.QueryStatement();
+            return 1;
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error update: " << e.what() << std::endl;
+            return 0;
+        }
+    }
+
+    int UpdateProduct(const int& ProductID, const int& Quantity) {
+        try {
+            DBConn db;  
+            db.preparedStatement("UPDATE `product` SET `Quantity`=? WHERE `ProductID`=?");  
+            db.stmt->setInt(1, Quantity); 
+            db.stmt->setInt(2, ProductID); 
+            db.QueryStatement(); 
+            return 1;
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error update: " << e.what() << std::endl; 
+            return 0; // Failure
+        }
         
-        DBConn db;
-        db.preparedStatement("UPDATE `sparepart` SET `StockBalance`=? WHERE `SparepartID` = ?");
-        db.stmt->setInt(1, newStockBalance);
-        db.stmt->setInt(1, SparepartID);
-        db.QueryStatement();
     }
 
-    void UpdateProduct(const int& ProductID, const int& Quantity) {
-        DBConn db;
-        db.preparedStatement("UPDATE `product` SET `Quantity`=? WHERE `ProductID`=?");
-        db.stmt->setInt(1, Quantity);
-        db.stmt->setInt(2, ProductID);
-        db.QueryStatement();
-    }
-
-    void UpdateOrderItem(const int& ItemID, const int& ProductID, const int& Quantity) {
-        DBConn db; 
-        db.preparedStatement("UPDATE `orderitem` SET `ProductID`=?,`Quantity`=? WHERE ItemID = ?"); 
-        db.stmt->setInt(1, ProductID); 
-        db.stmt->setInt(2, Quantity); 
-        db.stmt->setInt(3, ItemID); 
-        db.QueryStatement(); 
+    int UpdateOrderItem(const int& ItemID, const int& ProductID, const int& Quantity) {
+        try {
+            DBConn db; 
+            db.preparedStatement("UPDATE `orderitem` SET `ProductID`=?,`Quantity`=? WHERE ItemID = ?"); 
+            db.stmt->setInt(1, ProductID); 
+            db.stmt->setInt(2, Quantity); 
+            db.stmt->setInt(3, ItemID); 
+            db.QueryStatement(); 
+        } 
+        catch (const std::exception& e) {
+            std::cerr << "Error update: " << e.what() << std::endl;
+            return 0; // Failure
+        }
     }
 
     void UpdateOrder(const int& OrderId, const double& TotalPrice) {
@@ -518,6 +608,20 @@ public:
         db.preparedStatement("DELETE FROM `orderitem` WHERE ItemID = ?");
         db.stmt->setInt(1, ItemID);
         db.QueryStatement();
+    }
+
+    int DeleteSparepart(const int& SparepartID) {
+        try {
+            DBConn db; 
+            db.preparedStatement("DELETE FROM `sparepart` WHERE SparepartID = ?"); 
+            db.stmt->setInt(1, SparepartID); 
+            db.QueryStatement(); 
+            return 1;
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error delete: " << e.what() << std::endl;
+            return 0; // Failure
+        }
     }
 
     int getOrderID(double& price) {
@@ -536,5 +640,68 @@ public:
         }
     }
     
+    MonthlyReport* ListOfMonthlyData(int& id) {
+        MonthlyReport* report = new MonthlyReport[0];
+
+        DBConn db; 
+        db.preparedStatement("SELECT MONTH(DateTime) month,COUNT(*) as ttl, SUM(TotalPrice) as sum FROM `order` WHERE YEAR(DateTime) = '2024' AND StaffID = ? AND isActive = 1 GROUP BY MONTH(DateTime);"); 
+        db.stmt->setInt(1, id);
+        db.QuerySelectResult(); 
+        int counter = 0;
+        if (db.rs->rowsCount() != 0) {  
+            while (db.rs->next()) {  
+                report[counter].TotalCount = db.rs->getInt("ttl");  
+                report[counter].SumTtlPrice = db.rs->getInt("sum");
+                report[counter].month = db.rs->getInt("month");
+                counter++;
+            } 
+            return report;  
+        } 
+    }
+
+    int ReturnPaymentID(int& id, int& StaffID) {
+        DBConn db; 
+        db.preparedStatement("SELECT oi.OrderID, p.SupplierID, p.Name, p.Type,p.Brand,p.Price,oi.Quantity, s.Name SupplierName FROM `order` o join orderitem oi on oi.OrderID = o.OrderID join product p on p.ProductID = oi.ProductID join supplier s on s.SupplierID = p.SupplierID WHERE o.isActive = 0 AND o.StaffID = ? AND oi.ItemID = ?;"); 
+        db.stmt->setInt(1, StaffID); 
+        db.stmt->setInt(2, id); 
+        db.QuerySelectResult(); 
+        if (db.rs->rowsCount() == 1) {  
+            while (db.rs->next()) { 
+                id = db.rs->getInt("OrderID"); 
+            } 
+            return id; 
+        }  
+        else {
+            return 0; 
+        }
+    }
+
+    int UpdatePaymentID(int& Orderid) {
+        try {
+            DBConn db;
+            db.preparedStatement("UPDATE `order` SET `isActive`='1' WHERE OrderID = ?");
+            db.stmt->setInt(1, Orderid);
+            db.QueryStatement();
+            return 1;
+        }
+        catch (exception e) {
+            return 0;
+        }
+   
+    }
+    int UpdateBal(double& balance, int& id) {
+        try {
+            DBConn db;
+            db.preparedStatement("UPDATE `sparepart` SET `StockBalance`= ? WHERE SparepartID = ?");
+            db.stmt->setDouble(1, balance);
+            db.stmt->setInt(2, id);
+            db.QueryStatement();
+            return 1;
+        }
+        catch (exception e) {
+            return 0;
+        }
+    }
+
 #pragma endregion
 };

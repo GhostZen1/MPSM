@@ -5,8 +5,31 @@
 #include "OrderManagement.h"
 
 #include <iostream>
+#include <conio.h>
 
 using namespace std;
+
+string getPassword() {
+	string password;
+	char ch;
+
+	// Read each character entered by the user
+	while ((ch = _getch()) != '\r') { // '\r' is the carriage return character (Enter key)
+		if (ch == '\b') { // Handle backspace
+			if (!password.empty()) {
+				cout << "\b \b"; // Erase the last asterisk
+				password.pop_back(); // Remove last character from the password
+			}
+		}
+		else {
+			password += ch;
+			cout << '*'; // Print an asterisk
+		}
+	}
+
+	cout << endl;
+	return password;
+}
 
 void Menu::MainPage()
 {
@@ -24,10 +47,11 @@ void Menu::MainPage()
 
 	if (ans == 1) {
 		system("cls");
-		cout << "Username : ";
-		cin >> username;
+		cout << "Username : "; 
+		getline(cin >> ws, username);  
 		cout << "Password : ";
-		cin >> password;
+		//cin >> password;
+		password = getPassword(); 
 
 		int Staffid = DBConn().authenticateStaff(username, password);
 		int Supplierid = DBConn().authenticateSupplier(username, password);
@@ -83,8 +107,8 @@ void Menu::SupplierMainMenu(int id) {
 
 	cout << "\n1. View Stock" << endl;
 	cout << "2. Add Stock" << endl;
-	cout << "3. Remove Stock" << endl;
-	cout << "4. Edit Stock" << endl;
+	cout << "3. Remove Spare Part" << endl;
+	cout << "4. Edit Spare Part" << endl;
 	cout << "5. View Order" << endl;
 	cout << "6. View Monthly Report" << endl;
 	cout << "0. Logout" << endl;
@@ -109,10 +133,11 @@ void Menu::StaffMainMenu(int id) {
 
 	cout << "\n1. View Stock" << endl;
 	cout << "2. Make Order" << endl;
-	cout << "3. Remove Order" << endl;
-	cout << "4. Edit Order" << endl;
+	cout << "3. Remove Spare Part" << endl;
+	cout << "4. Edit Spare Part" << endl;
 	cout << "5. View Order" << endl;
 	cout << "6. View Monthly Report" << endl;
+	cout << "7. Payment" << endl;
 	cout << "0. Logout" << endl;
 
 	cout << "\nChoose your option : ";
@@ -122,19 +147,24 @@ void Menu::StaffMainMenu(int id) {
 		Sparepart().StaffViewStock(id);
 	}
 	else if (ans == 2) {
-		OrderManagement().AddOrder(id);
+		OrderManagement().listOfSupplier(id);
 	}
 	else if (ans == 3) {
-		OrderManagement().removeOrder(id);
+		Sparepart().DeleteStock(id);
+		//OrderManagement().removeOrder(id);
 	}
 	else if (ans == 4) {
-		OrderManagement().editOrder(id);
+		Sparepart().UpdateStock(id);
+		//OrderManagement().editOrder(id);
 	}
 	else if (ans == 5) {
 		OrderManagement().viewOrder(id);
 	}
 	else if(ans == 6) {
 		Sparepart().ViewMonthlyReport(id);
+	}
+	else if (ans == 7) {
+		OrderManagement().MakePayment(id);
 	}
 	else if (ans == 0) {
 		MainPage();
