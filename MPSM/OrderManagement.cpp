@@ -31,26 +31,30 @@ double* ItemPrice = new double[MAX_CHOICES];
 
 #pragma region Staff
 void OrderManagement::viewOrder(int id){
-	int ans, itemCount = 0;
+	int itemCount = 0;
+	string ans;
 	
 	system("cls");
 
 	cout << "List of order " << endl; 
 	DBConn::Order* OrderList = DBConn().ViewOrder(id); 
+
+	cout << "Staff Name : " << OrderList[itemCount].StaffName << endl << endl;
+	cout << "-------------------------------------------------------------------------" << endl;
 	cout << left << setw(columnWidth) << "Item ID"
 		<< setw(columnWidth) << "Product Name" 
-		<< setw(columnWidth) << "Quantity" 
-		<< setw(columnWidth) << "Staff Name" 
-		<< setw(columnWidth) << "Total Price" << endl; 
+		<< setw(columnWidth) << "Quantity(Unit)" 
+		<< setw(columnWidth) << "Total Price(RM)" << endl; 
+	cout << "-------------------------------------------------------------------------" << endl;
 
 	for (int i = 0; i < sizeof(OrderList); i++) {
 		while (OrderList[itemCount].OrderId != 0) { 
 			cout << left << setw(columnWidth) << OrderList[itemCount].OrderItemId
-				<< setw(columnWidth) << OrderList[itemCount].ProductName 
-				<< setw(columnWidth) << OrderList[itemCount].Quantity 
-				<< setw(columnWidth) << OrderList[itemCount].StaffName 
-				<< setw(columnWidth) << OrderList[itemCount].totalPrice << endl; 
+				<< setw(columnWidth) << OrderList[itemCount].ProductName
+				<< setw(columnWidth) << OrderList[itemCount].Quantity
+				<< setw(columnWidth) << OrderList[itemCount].Price << endl;
 			itemCount++; 
+			cout << "-------------------------------------------------------------------------" << endl;
 		}
 	}
 
@@ -58,7 +62,7 @@ void OrderManagement::viewOrder(int id){
 	cout << "Choice : ";
 	cin >> ans;
 
-	if (ans == 0) {
+	if (ans == "0") {
 		Menu().StaffMainMenu(id);
 	}
 	else {
@@ -69,20 +73,23 @@ void OrderManagement::viewOrder(int id){
 }
 
 void OrderManagement::listOfSupplier(int id) {
-	int selectID, ans, itemCount = 0, supID;
+	int selectID, itemCount = 0, supID;
+	string ans;
 
 	system("cls");
 	DBConn::Supplier* OrderList = DBConn().ListoFSupplier(); 
+	cout << "------------------------------------------------------------------------------------" << endl;
 	cout << left << setw(columnWidth1) << "Supplier ID"
 		<< setw(columnWidth1) << "Supplier Name"
 		<< setw(columnWidth1) << "Address" << endl;
-
+	cout << "------------------------------------------------------------------------------------" << endl;
 	//for (int i = 0; i < sizeof(OrderList); i++) {
 		while (OrderList[itemCount].SupplierID != 0) {
 			cout << left << setw(columnWidth1) << OrderList[itemCount].SupplierID
 				<< setw(columnWidth1) << OrderList[itemCount].SupplierName
 				<< setw(columnWidth1) << OrderList[itemCount].SupplierAddress << endl;
 			itemCount++;
+			cout << "------------------------------------------------------------------------------------" << endl;
 		}
 	//}
 
@@ -91,10 +98,10 @@ void OrderManagement::listOfSupplier(int id) {
 	cout << "\nYour Choice : ";
 	cin >> ans;
 
-	if (ans == 0) {
+	if (ans == "0") {
 		Menu().StaffMainMenu(id); 
 	}
-	else if (ans == 1){
+	else if (ans == "1"){
 		cout << "Select Supplier ID : "; 
 		cin >> supID; 
 		AddOrder(id, supID); 
@@ -107,8 +114,8 @@ void OrderManagement::listOfSupplier(int id) {
 }
 
 void OrderManagement::AddOrder(int id, int idSupplier){
-	int ans, choose, qtt, numChoices = 0, isActive; 
-	string addMore, payment;
+	int  choose, qtt, numChoices = 0, isActive, userpay; 
+	string addMore, payment, ans;
 	double price = 0;
 
 	system("cls");
@@ -121,22 +128,25 @@ void OrderManagement::AddOrder(int id, int idSupplier){
 
 	cout << "\nList of all spare parts " << endl << endl;
 
+	cout << "-----------------------------------------------------------------------------------------------------------------------------" << endl;
 	cout << left << setw(columnWidth2) << "Item ID"  
 		<< setw(columnWidth1) << "Item Name"
 		<< setw(columnWidth) << "Supplier Name"
 		<< setw(columnWidth2) << "Item Type"
 		<< setw(columnWidth2) << "Item Brand"
-		<< setw(columnWidth2) << "Item Price"
-		<< setw(columnWidth2) << "Quantity" << endl;
+		<< setw(columnWidth2) << "Item Price (RM)"
+		<< setw(columnWidth2) << "Quantity (Unit)" << endl;
+	cout << "-----------------------------------------------------------------------------------------------------------------------------" << endl;
 
 	for (int i = 0; i < itemCount; ++i) {
-		cout << left << setw(columnWidth2) << Sparepart[i].ItemID 
+		cout << left << setw(columnWidth2) << Sparepart[i].ItemID
 			<< setw(columnWidth1) << Sparepart[i].ItemName
 			<< setw(columnWidth) << Sparepart[i].SupplierName
 			<< setw(columnWidth2) << Sparepart[i].ItemType
 			<< setw(columnWidth2) << Sparepart[i].ItemBrand
 			<< setw(columnWidth2) << Sparepart[i].ItemPrice
 			<< setw(columnWidth2) << Sparepart[i].quantity << endl;
+		cout << "-----------------------------------------------------------------------------------------------------------------------------" << endl;
 	}
 
 	cout << "\n1. Continue make order" << endl;
@@ -144,10 +154,10 @@ void OrderManagement::AddOrder(int id, int idSupplier){
 	cout << "\nYour Choice : ";
 	cin >> ans;
 
-	if (ans == 0) {
+	if (ans == "0") {
 		Menu().StaffMainMenu(id);
 	}
-	else if (ans == 1) {
+	else if (ans == "1") {
 		do {
 			cout << "Please choose an item ID to select: ";
 			cin >> choose;
@@ -189,14 +199,16 @@ void OrderManagement::AddOrder(int id, int idSupplier){
 
 		system("cls");
 
+		cout << "--------------------------------------------------------------------------------------------------------------------------" << endl;
 		cout << left << setw(columnWidth2) << "Item ID"
 			<< setw(columnWidth) << "Item Name" 
 			<< setw(columnWidth) << "Supplier Name" 
 			<< setw(columnWidth) << "Item Type" 
 			<< setw(columnWidth) << "Item Brand" 
 			<< setw(columnWidth2) << "Item Price"
-			<< setw(columnWidth2) << "Quantities"
-			<< setw(columnWidth2) << "Total Price" << endl;
+			<< setw(columnWidth2) << "Quantities (Unit)"
+			<< setw(columnWidth2) << "Total Price (RM)" << endl;
+		cout << "--------------------------------------------------------------------------------------------------------------------------" << endl;
 
 		for (int i = 0; i < numChoices; i++) { 
 			int itemId = choices[i];  
@@ -205,11 +217,12 @@ void OrderManagement::AddOrder(int id, int idSupplier){
 					cout << left << setw(columnWidth2) << itemId
 						<< setw(columnWidth) << Sparepart[j].ItemName
 						<< setw(columnWidth) << Sparepart[j].SupplierName
-						<< setw(columnWidth) << Sparepart[j].ItemType
-						<< setw(columnWidth) << Sparepart[j].ItemBrand
+						<< setw(columnWidth) << Sparepart[j].ItemType 
+						<< setw(columnWidth) << Sparepart[j].ItemBrand 
 						<< setw(columnWidth2) << Sparepart[j].ItemPrice
-						<< setw(columnWidth2) << quantities[i]
+						<< setw(columnWidth2) << quantities[i] 
 						<< setw(columnWidth2) << ItemPrice[i] << endl;
+					cout << "--------------------------------------------------------------------------------------------------------------------------" << endl;
 
 					price += quantities[i] * stod(Sparepart[j].ItemPrice); 
 					break;
@@ -221,14 +234,20 @@ void OrderManagement::AddOrder(int id, int idSupplier){
 		cin >> payment;
 
 		payment == "Y" || payment == "y" ? isActive = 1 : isActive = 0;
+		
+		cout << "Total Item is : RM " << price;
+		cout << "\nTotal Payment : RM ";
+		cin >> userpay;
+
+		userpay >= price ? isActive = 1 : isActive = 0; 
 
 		DBConn().MakeOrder(id, price, isActive);
-		int orderID = DBConn().getOrderID(price); 
+		int orderID = DBConn().getOrderID(); 
 		for (int i = 0; i < numChoices; i++) {  
 			int itemId = choices[i];
 			for (int j = 0; j < itemCount; j++) {
 				if (Sparepart[j].ItemID == itemId) {
-					DBConn().MakeOrderItem(orderID, itemId, quantities[i], ItemPrice[i]); 
+					DBConn().MakeOrderItem(orderID, itemId, quantities[i], ItemPrice[i], isActive);
 					int SparepartID = DBConn().CheckSparepart(Sparepart[j].ItemName); 
 					if (SparepartID != 0) {
 						int balance = DBConn().CheckSparepartBalance(SparepartID); 
@@ -245,13 +264,49 @@ void OrderManagement::AddOrder(int id, int idSupplier){
 			}
 		}
 
-		delete[] choices;
-		delete[] quantities; 
-		delete[] Sparepart;
+		if (userpay >= price) {
+			system("cls");
+			cout << "RECEIPT" << endl;
 
-		cout << "You have been successfully make this order." << endl;  
-		system("pause");  
-		Menu().StaffMainMenu(id);  
+			cout << left << setw(columnWidth2) << "ID" 
+				<< setw(columnWidth) << "Item Name" 
+				<< setw(columnWidth) << "Quantity" 
+				<< setw(columnWidth2) << "Price" << endl;
+
+			cout << string(140, '-') << endl;
+
+			cout << left << setw(columnWidth2) << "ID" 
+				<< setw(columnWidth) << "Item Name" 
+				<< setw(columnWidth2) << "Quantity" 
+				<< setw(columnWidth2) << "Price" << endl; 
+			cout << string(140, '-') << endl; 
+
+			for (int i = 0; i < numChoices; i++) { 
+				int itemId = choices[i]; 
+				for (int j = 0; j < itemCount; j++) {  
+					if (Sparepart[j].ItemID == itemId) { 
+						cout << left << setw(columnWidth2) << itemId 
+							<< setw(columnWidth) << Sparepart[j].ItemName 
+							<< setw(columnWidth2) << quantities[i] 
+							<< setw(columnWidth2) << ItemPrice[i] << endl; 
+						break;
+					}
+				}
+			}
+			cout << string(140, '-') << endl; 
+			cout << "Total: RM " << price << endl; 
+			cout << "Paid: RM " << userpay << endl;
+			cout << "Change: RM " << userpay - price << endl;
+			system("pause");   
+			Menu().StaffMainMenu(id);   
+		}
+		else {
+			cout << "The order is not been order. Please go to the payment function to continue" << endl; 
+			system("pause"); 
+			Menu().StaffMainMenu(id); 
+		}
+
+		
 	} 
 	else {  
 		cout << "You enter the wrong number"; 
@@ -261,34 +316,40 @@ void OrderManagement::AddOrder(int id, int idSupplier){
 }
 
 void OrderManagement::MakePayment(int id) {
-	int ans, payID;
+	string ans, idpay;
+	int payID , userpay,isPaid = 0;
 	string pay;
+	double price = 0;
 	system("cls");
 
 	cout << "Make Order" << endl;
 
-	DBConn::SparepartList paymentList = DBConn().ListOfPayment(id); 
+	DBConn::SparepartList paymentList = DBConn().ListOfPayment(id, isPaid);
 	DBConn::Item* Sparepart = paymentList.items; 
 	int itemCount = paymentList.count; 
 
 	cout << "\nList of all spare parts didnt pay yet " << endl << endl;
 
+	cout << "---------------------------------------------------------------------------------------" << endl;
 	cout << left << setw(columnWidth2) << "Item ID"
 		<< setw(columnWidth1) << "Item Name"
 		<< setw(columnWidth) << "Supplier Name"
 		<< setw(columnWidth2) << "Item Type"
 		<< setw(columnWidth2) << "Item Brand"
-		<< setw(columnWidth2) << "Item Price"
-		<< setw(columnWidth2) << "Quantity" << endl;
+		<< setw(columnWidth2) << "Item Price (RM)"
+		<< setw(columnWidth2) << "Quantity (Unit)" << endl;
+	cout << "---------------------------------------------------------------------------------------" << endl;
 
 	for (int i = 0; i < itemCount; ++i) {  
-		cout << left << setw(columnWidth2) << Sparepart[i].ItemID 
-			<< setw(columnWidth1) << Sparepart[i].ItemName 
+		cout << left << setw(columnWidth2) << Sparepart[i].ItemID
+			<< setw(columnWidth1) << Sparepart[i].ItemName
 			<< setw(columnWidth) << Sparepart[i].SupplierName 
 			<< setw(columnWidth2) << Sparepart[i].ItemType 
-			<< setw(columnWidth2) << Sparepart[i].ItemBrand 
+			<< setw(columnWidth2) << Sparepart[i].ItemBrand
 			<< setw(columnWidth2) << Sparepart[i].ItemPrice 
-			<< setw(columnWidth2) << Sparepart[i].quantity << endl; 
+			<< setw(columnWidth2) << Sparepart[i].quantity << endl;
+		price += stod(Sparepart[i].ItemPrice);
+		cout << "---------------------------------------------------------------------------------------" << endl;
 	} 
 
 	cout << "\n1. Continue make payment" << endl;
@@ -296,12 +357,13 @@ void OrderManagement::MakePayment(int id) {
 	cout << "\nYour Choice : ";
 	cin >> ans;
 
-	if (ans == 0) {
+	if (ans == "0") {
 		Menu().StaffMainMenu(id);
 	}
-	else if (ans == 1) {
+	else if (ans == "1") {
 		cout << "Choose your item ID :";
-		cin >> payID;
+		cin >> idpay;
+		payID = stoi(idpay);
 		int Itemid = DBConn().ReturnPaymentID(payID, id);
 		if (Itemid == 0) {
 			cout << "You enter invalid number" << endl; 
@@ -309,16 +371,51 @@ void OrderManagement::MakePayment(int id) {
 			MakePayment(id);  
 		}
 		else {
-			cout << "\nDo you want to make the payment ? (y/n) :";
-			cin >> pay;
-			if (pay == "Y" || pay == "y") {
-				DBConn().UpdatePaymentID(Itemid);
-				cout << "Successfully Pay " << endl;
-				system("pause");
-				Menu().StaffMainMenu(id);  
+			cout << "Total Price: RM " << price << endl;
+			cout << "Enter the amount you are paying: RM ";
+			cin >> userpay;
+
+			if (userpay >= price) {
+				cout << "\nDo you want to make the payment? (y/n): ";
+				cin >> pay;
+				if (pay == "Y" || pay == "y") {
+					DBConn().UpdatePaymentID(Itemid);
+					int itemid = stoi(idpay);
+					DBConn().UpdatePaymentOrderItemID(itemid);
+					cout << "Receipt" << endl << endl;
+
+					isPaid = 1;
+					DBConn::SparepartList paymentList1 = DBConn().ListOfPayment(id, isPaid);
+					DBConn::Item* Sparepart1 = paymentList1.items;
+					int itemCount1 = paymentList1.count;
+					cout << left << setw(columnWidth2) << "ID"
+						<< setw(columnWidth) << "Item Name"
+						<< setw(columnWidth2) << "Quantity"
+						<< setw(columnWidth2) << "Price" << endl;
+					cout << string(60, '-') << endl;
+					for (int i = 0; i < itemCount1; ++i) {
+						if (Sparepart1[i].ItemID == itemid) {
+							cout << left << setw(columnWidth2) << Sparepart1[i].ItemID
+							<< setw(columnWidth) << Sparepart1[i].ItemName
+							<< setw(columnWidth2) << Sparepart1[i].quantity
+							<< setw(columnWidth2) << Sparepart1[i].ItemPrice << endl;
+						}
+					}
+					cout << string(60, '-') << endl;
+					cout << "Total: RM " << price << endl;
+					cout << "Paid: RM " << userpay << endl;
+					cout << "Change: RM " << userpay - price << endl;
+					system("pause");
+					Menu().StaffMainMenu(id);
+				}
+				else {
+					MakePayment(id);
+				}
 			}
 			else {
-				MakePayment(id); 
+				cout << "Insufficient payment. Please enter the correct amount." << endl;
+				system("pause");
+				MakePayment(id);
 			}
 		}
 		

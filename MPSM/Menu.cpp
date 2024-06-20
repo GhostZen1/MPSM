@@ -78,16 +78,16 @@ void Menu::MainPage()
 	}
 	else if (ans == 2) {
 		system("cls");
-		cout << "What role are you?" << endl;
-		cout << "1.	Supplier" << endl;
-		cout << "2.	Staff" << endl;
+		cout << "Are you want to continue?" << endl;
+		//cout << "1.	Supplier" << endl;
+		cout << "1.	Staff" << endl;
 		cout << "0.	Back" << endl;
 		cout << "\nYour Choice : ";
 		cin >> role;
 
-		if (role == 1)
+		/*if (role == 1)
 			Login().SupplierRegisteration();
-		else if (role == 2)
+		else */if (role == 1)
 			Login().StaffRegisteration();
 		else
 			MainPage();
@@ -126,7 +126,7 @@ void Menu::SupplierMainMenu(int id) {
 #pragma region Staff
 void Menu::StaffMainMenu(int id) {
 	system("cls");
-	int ans;
+	string ans;
 
 	cout << "Welcome to Staff Main Menu" << endl;
 	cout << "\nStaff Name : " + DBConn().getStaffUserName(id) << endl;
@@ -137,36 +137,36 @@ void Menu::StaffMainMenu(int id) {
 	cout << "4. Edit Spare Part" << endl;
 	cout << "5. View Order" << endl;
 	cout << "6. View Monthly Report" << endl;
-	cout << "7. Payment" << endl;
+	cout << "7. Item Did Not Pay Yet" << endl;
 	cout << "0. Logout" << endl;
 
 	cout << "\nChoose your option : ";
 	cin >> ans;
 
-	if (ans == 1) {
+	if (ans == "1") {
 		Sparepart().StaffViewStock(id);
 	}
-	else if (ans == 2) {
+	else if (ans == "2") {
 		OrderManagement().listOfSupplier(id);
 	}
-	else if (ans == 3) {
+	else if (ans == "3") {
 		Sparepart().DeleteStock(id);
 		//OrderManagement().removeOrder(id);
 	}
-	else if (ans == 4) {
+	else if (ans == "4") {
 		Sparepart().UpdateStock(id);
 		//OrderManagement().editOrder(id);
 	}
-	else if (ans == 5) {
+	else if (ans == "5") {
 		OrderManagement().viewOrder(id);
 	}
-	else if(ans == 6) {
+	else if(ans == "6") {
 		Sparepart().ViewMonthlyReport(id);
 	}
-	else if (ans == 7) {
+	else if (ans == "7") {
 		OrderManagement().MakePayment(id);
 	}
-	else if (ans == 0) {
+	else if (ans == "0") {
 		MainPage();
 	}
 	else {

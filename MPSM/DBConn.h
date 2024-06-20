@@ -377,12 +377,13 @@ public:
         //return items; 
     }
 
-    SparepartList ListOfPayment(int idStaff) {
+    SparepartList ListOfPayment(int idStaff, int isPaid) {
         Item* items = new Item[100000];
 
         DBConn db;
-        db.preparedStatement("SELECT oi.ItemID, p.SupplierID, p.Name, p.Type,p.Brand,p.Price,oi.Quantity, s.Name SupplierName FROM `order` o join orderitem oi on oi.OrderID = o.OrderID join product p on p.ProductID = oi.ProductID join supplier s on s.SupplierID = p.SupplierID WHERE o.isActive = 0 AND o.StaffID = ?;");
-        db.stmt->setInt(1, idStaff);
+        db.preparedStatement("SELECT oi.ItemID, p.SupplierID, p.Name, p.Type,p.Brand,p.Price,oi.Quantity, s.Name SupplierName FROM `order` o join orderitem oi on oi.OrderID = o.OrderID join product p on p.ProductID = oi.ProductID join supplier s on s.SupplierID = p.SupplierID WHERE oi.isPaid = ? AND o.StaffID = ?;");
+        db.stmt->setInt(1, isPaid);
+        db.stmt->setInt(2, idStaff);
         db.QuerySelectResult();
         int itemCount = 0;
         while (db.rs->next()) {
@@ -407,7 +408,7 @@ public:
         Order* order = new Order[100000];
 
         DBConn db;
-        db.preparedStatement("SELECT o.OrderID,o.StaffID,o.TotalPrice,oi.ItemID,oi.ProductID, oi.Quantity, s.Name,p.Name PName, oi.Price FROM `order` o join `orderitem` oi on o.OrderID = oi.OrderID JOIN staff s ON s.StaffID = o.StaffID JOIN product p ON p.ProductID = oi.ProductID WHERE o.StaffID = ? AND o.isActive = 1");
+        db.preparedStatement("SELECT o.OrderID,o.StaffID,o.TotalPrice,oi.ItemID,oi.ProductID, oi.Quantity, s.Name,p.Name PName, oi.Price FROM `order` o join `orderitem` oi on o.OrderID = oi.OrderID JOIN staff s ON s.StaffID = o.StaffID JOIN product p ON p.ProductID = oi.ProductID WHERE o.StaffID = ? AND o.isPaid = 1");
         db.stmt->setInt(1, Staffid);
         db.QuerySelectResult();
         int OrderCount = 0;
@@ -461,7 +462,7 @@ public:
         string datetime_str(buffer);
 
         DBConn db;
-        db.preparedStatement("INSERT INTO `order`(`StaffID`, `isActive`, `TotalPrice`, `DateTime`) VALUES (?,?,?,?)");
+        db.preparedStatement("INSERT INTO `order`(`StaffID`, `isPaid`, `TotalPrice`, `DateTime`) VALUES (?,?,?,?)");
         db.stmt->setInt(1, StaffId); 
         db.stmt->setInt(2, isActive); 
         db.stmt->setDouble(3, price); 
@@ -469,7 +470,7 @@ public:
         db.QueryStatement(); 
     }
 
-    void MakeOrderItem(const int& OrderID, const int& ProductId, const int& qtt, const double& price) {
+    void MakeOrderItem(const int& OrderID, const int& ProductId, const int& qtt, const double& price, int isActive) {
         time_t now = std::time(nullptr);
 
         tm local_time;
@@ -480,12 +481,13 @@ public:
         string datetime_str(buffer);
 
         DBConn db;
-        db.preparedStatement("INSERT INTO `orderitem`(`OrderID`, `ProductID`, `Quantity`, `DateTime`, `Price`) VALUES (?,?,?,?,?)"); 
+        db.preparedStatement("INSERT INTO `orderitem`(`OrderID`, `ProductID`, `Quantity`, `DateTime`, `Price`, `isPaid`) VALUES (?,?,?,?,?,?)"); 
         db.stmt->setInt(1, OrderID);
         db.stmt->setInt(2, ProductId);
         db.stmt->setInt(3, qtt);
         db.stmt->setDateTime(4, datetime_str); 
         db.stmt->setDouble(5, price); 
+        db.stmt->setInt(6, isActive);
         db.QueryStatement(); 
     }
 
@@ -624,10 +626,9 @@ public:
         }
     }
 
-    int getOrderID(double& price) {
+    int getOrderID() {
         DBConn db;
-        db.preparedStatement("SELECT * FROM `order` WHERE TotalPrice = ?"); 
-        db.stmt->setDouble(1, price); 
+        db.preparedStatement("SELECT * FROM `order` Order By OrderID DESC LIMIT 1;"); 
         db.QuerySelectResult(); 
         if (db.rs->rowsCount() == 1) { 
             while (db.rs->next()) { 
@@ -644,7 +645,7 @@ public:
         MonthlyReport* report = new MonthlyReport[0];
 
         DBConn db; 
-        db.preparedStatement("SELECT MONTH(DateTime) month,COUNT(*) as ttl, SUM(TotalPrice) as sum FROM `order` WHERE YEAR(DateTime) = '2024' AND StaffID = ? AND isActive = 1 GROUP BY MONTH(DateTime);"); 
+        db.preparedStatement("SELECT MONTH(DateTime) month,COUNT(*) as ttl, SUM(TotalPrice) as sum FROM `order` WHERE YEAR(DateTime) = '2024' AND StaffID = ? AND isPaid = 1 GROUP BY MONTH(DateTime);"); 
         db.stmt->setInt(1, id);
         db.QuerySelectResult(); 
         int counter = 0;
@@ -661,7 +662,7 @@ public:
 
     int ReturnPaymentID(int& id, int& StaffID) {
         DBConn db; 
-        db.preparedStatement("SELECT oi.OrderID, p.SupplierID, p.Name, p.Type,p.Brand,p.Price,oi.Quantity, s.Name SupplierName FROM `order` o join orderitem oi on oi.OrderID = o.OrderID join product p on p.ProductID = oi.ProductID join supplier s on s.SupplierID = p.SupplierID WHERE o.isActive = 0 AND o.StaffID = ? AND oi.ItemID = ?;"); 
+        db.preparedStatement("SELECT oi.OrderID, p.SupplierID, p.Name, p.Type,p.Brand,p.Price,oi.Quantity, s.Name SupplierName FROM `order` o join orderitem oi on oi.OrderID = o.OrderID join product p on p.ProductID = oi.ProductID join supplier s on s.SupplierID = p.SupplierID WHERE oi.isPaid = 0 AND o.StaffID = ? AND oi.ItemID = ?;"); 
         db.stmt->setInt(1, StaffID); 
         db.stmt->setInt(2, id); 
         db.QuerySelectResult(); 
@@ -679,7 +680,7 @@ public:
     int UpdatePaymentID(int& Orderid) {
         try {
             DBConn db;
-            db.preparedStatement("UPDATE `order` SET `isActive`='1' WHERE OrderID = ?");
+            db.preparedStatement("UPDATE `order` SET `isPaid`='1' WHERE OrderID = ?");
             db.stmt->setInt(1, Orderid);
             db.QueryStatement();
             return 1;
@@ -689,18 +690,93 @@ public:
         }
    
     }
-    int UpdateBal(double& balance, int& id) {
+
+    int UpdatePaymentOrderItemID(int& Orderid) {
         try {
             DBConn db;
-            db.preparedStatement("UPDATE `sparepart` SET `StockBalance`= ? WHERE SparepartID = ?");
-            db.stmt->setDouble(1, balance);
-            db.stmt->setInt(2, id);
+            db.preparedStatement("UPDATE `orderitem` SET `isPaid`='1' WHERE ItemID = ?");
+            db.stmt->setInt(1, Orderid);
             db.QueryStatement();
             return 1;
         }
         catch (exception e) {
             return 0;
         }
+
+    }
+
+    int UpdateBal(double& balance, int& id, int& staffID) {
+        try {
+            DBConn db;
+            db.preparedStatement("UPDATE `sparepart` SET `StockBalance`= ? WHERE SparepartID = ? AND StaffID = ?");
+            db.stmt->setDouble(1, balance);
+            db.stmt->setInt(2, id);
+            db.stmt->setInt(3, staffID);
+            int check = db.stmt->executeUpdate(); 
+            if (check > 0) {
+                return 1; 
+            }
+            else {
+                return 0; 
+            }
+        }
+        catch (exception e) {
+            return 0;
+        }
+    }
+
+    int UpdateCurrentPrice(double& price, int& id, int& staffID) {
+        try {
+            DBConn db;
+            db.preparedStatement("UPDATE `sparepart` SET `Price`= ? WHERE SparepartID = ? AND StaffID = ?");
+            db.stmt->setDouble(1, price);
+            db.stmt->setInt(2, id);
+            db.stmt->setInt(3, staffID);
+            int check = db.stmt->executeUpdate(); 
+            if (check > 0) { 
+                return 1; 
+            } 
+            else {
+                return 0;
+            }
+        }
+        catch (exception e) {
+            return 0;
+        }
+    }
+
+    int getCurrentPrice(int& id) {
+        int price;
+        DBConn db;
+        db.preparedStatement("SELECT * FROM `sparepart` WHERE SparepartID = ?");
+        db.stmt->setInt(1, id);
+        if (db.rs->rowsCount() == 1) {
+            while (db.rs->next()) {
+                price = db.rs->getInt("Price"); 
+            }
+            return price; 
+        }
+        else {
+            return 0;
+        }
+        
+    }
+
+    int getBalance(int& id) {
+        int bal;
+        DBConn db;
+        db.preparedStatement("SELECT * FROM `sparepart` WHERE SparepartID = ?");
+        db.stmt->setInt(1, id);
+        if (db.rs->rowsCount() == 1) { 
+            while (db.rs->next()) { 
+                bal = db.rs->getInt("OrderID"); 
+            } 
+            return bal; 
+        } 
+        else { 
+            return 0; 
+        }
+        
     }
 
 #pragma endregion

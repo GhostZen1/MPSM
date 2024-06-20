@@ -50,6 +50,7 @@ void Sparepart::StaffViewStock(int id) {
 	}
 
 	cout << "\n0. Back to main page " << endl;
+	cout << "\nYour Choice : " << endl;
 	cin >> ans;
 
 	if (ans == 0) {
@@ -96,34 +97,52 @@ void Sparepart::UpdateStock(int id) {
 
 	cout << "1. Continue Update" << endl; 
 	cout << "0. Back to main page " << endl; 
+	cout << "Your Choice : "; 
 	cin >> UpdAns;
 	
 	if (UpdAns == 1) {
 		do {
-			cout << "\nWhich item that you want to change ? (Enter ID)" << endl;
+			cout << "\nWhich item that you want to change ? (Enter ID) :";
 			cin >> enterId;
 
 			cout << "\nWhich part that you want to change ? \n1. Stock Balance\n2. Item Price" << endl;
+			cout << "\nYour Choice : ";
 			cin >> enterPart;
 
 			
 			if (enterPart == 1) {
-				cout << "Stock Current Balance : " << endl; //display old
+				//cout << "Stock Current Balance : " << DBConn().getBalance(enterId) << endl; //display old
 				cout << "New Balance : ";
 				cin >> newBal; 
 
-				int sccs = DBConn().UpdateBal(newBal, id);
+				int sccs = DBConn().UpdateBal(newBal, enterId, id);  
 
 				if (sccs == 1) {
 					cout << "Update Successfully" << endl;
 					system("pause");
-					return;
+				}
+				else {
+					cout << "Fail to Update" << endl;
+					system("pause");
+					UpdateStock(id);
 				}
 			}
 			else if (enterPart == 2) {
-				cout << "Item Current Price : " << endl; //display old
+				//cout << "Item Current Price : " << DBConn().getCurrentPrice(enterId) << endl; //display old
 				cout << "New Item Price : ";
 				cin >> newPrice;
+
+				int sccs = DBConn().UpdateCurrentPrice(newPrice, enterId, id); 
+
+				if (sccs == 1) { 
+					cout << "Update Successfully" << endl; 
+					system("pause");  
+				}
+				else {
+					cout << "Fail to Update" << endl;
+					system("pause");
+					UpdateStock(id); 
+				}
 			}
 			else {
 				cout << "You have enter invalid number" << endl;
@@ -131,12 +150,12 @@ void Sparepart::UpdateStock(int id) {
 				UpdateStock(id);
 			}
 
-			cout << "Are you sure want to change other part that have been order? (y/n)" << endl;
+			cout << "Are you sure want to change other part that have been order? (y/n) : ";
 			cin >> confirmation; 
 
 		} while (confirmation == "y" || confirmation == "Y"); 
 
-		cout << "Are you sure want to change this order? (y/n)" << endl;
+		cout << "Are you sure want to change this order? (y/n) : ";
 		cin >> confirmInsert;
 
 		if (confirmInsert == "Y" || confirmInsert == "y") { 
@@ -194,10 +213,10 @@ void Sparepart::DeleteStock(int id) {
 		Menu().StaffMainMenu(id);
 	}
 	else if (ans == 1) {
-		cout << "\nPlease choose which ID that you want to delete? " << endl;
+		cout << "\nPlease choose which ID that you want to delete? : ";
 		cin >> Delans; 
 
-		cout << "Are you sure want to delete this order? (y/n)" << endl;
+		cout << "Are you sure want to delete this order? (y/n) :" ;
 		cin >> confirmation;
 
 		if (confirmation == 'y' || confirmation == 'Y') {
@@ -224,7 +243,8 @@ void Sparepart::DeleteStock(int id) {
 }
 
 string GetMonthName(int month) {
-	string months[12] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October","November", "December" }; 
+	string months[12] = { "January", "February", "March", "April", "May",
+		"June", "July", "August", "September", "October","November", "December" }; 
 
 	if (month != -1) {
 		return months[month - 1];
@@ -262,6 +282,7 @@ void Sparepart::ViewMonthlyReport(int id) {
 	//}
 	
 	cout << "\n0. Back to main page " << endl; 
+	cout << "\nYour Choice :"; 
 	cin >> ans; 
 
 	ans == 0 ? Menu().StaffMainMenu(id) : ViewMonthlyReport(id); 

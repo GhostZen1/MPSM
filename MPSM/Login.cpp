@@ -42,7 +42,7 @@ void Login::StaffRegisteration() {
 	cout << "1.Male" << endl;
 	cout << "\nYour Choice : ";
 	cin >> staffGender;
-	if (staffGender != 0 || staffGender != 1) {
+	if (staffGender != 0 && staffGender != 1) {
 		cout << "Invalid Input" << endl;
 		StaffRegisteration();
 	}
